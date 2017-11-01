@@ -55,6 +55,15 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>if $(ConfigurationName) == Release (
+  copy "$(TargetDir)AlphabeticalKerbals.dll" "$(SolutionDir)distrib\AlphabeticalKerbals\" /y
+  echo "Looking for 7-zip in Program Files = %25ProgramFiles%25"
+  if exist "%25ProgramFiles%25\7-Zip\7z.exe" (
+    "%25ProgramFiles%25\7-Zip\7z.exe" a -r -y "$(SolutionDir)distrib\AlphabeticalKerbals.zip" "$(SolutionDir)distrib\AlphabeticalKerbals"
+  )
+)</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

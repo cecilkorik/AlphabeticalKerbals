@@ -23,12 +23,14 @@ namespace AlphabeticalKerbals
 
                 UIList_QSort(avail, 0, avail.Count-1);
 
+#if DEBUG
                 for (int i = 0; i < avail.Count; i++)
                 {
                     UIListItem li = avail.GetUilistItemAt(i);
                     CrewListItem crew = li.GetComponent<CrewListItem>();
                     print("AFTER SORT = " + crew.GetName());
                 }
+#endif
 
                 return true;
                 
@@ -102,7 +104,9 @@ namespace AlphabeticalKerbals
             // Select a random pivot point
             int pi = UnityEngine.Random.Range(li+1, ri+1);
             UIListItem pivot = list.GetUilistItemAt(pi);
+#if DEBUG
             print("Selected pivot is " + pivot.GetComponent<CrewListItem>().GetName() + " at pos " + pi.ToString());
+#endif
 
             if (pi < ri)
             {
@@ -121,8 +125,10 @@ namespace AlphabeticalKerbals
                 UIListItem selected = list.GetUilistItemAt(j);
                 if (UIList_Cmp(selected, pivot) < 1)
                 {
+#if DEBUG
                     print("Pivotname is " + pivot.GetComponent<CrewListItem>().GetName() + " selname is " + selected.GetComponent<CrewListItem>().GetName());
                     UIList_DebugPrint(list, i, j, "Partition-swapping (" + i.ToString() + "," + j.ToString() + "," + UIList_Cmp(selected, pivot) + ")");
+#endif
                     if (i < j)
                     {
                         list.SwapItems(prev, selected);
@@ -156,15 +162,19 @@ namespace AlphabeticalKerbals
 
             if (li < ri)
             {
+#if DEBUG
                 print("Before partition from " + li.ToString() + "-" + ri.ToString());
                 UIList_DebugPrint(list, li, ri, "Initial");
+#endif
 
                 int pi = UIList_Partition(list, li, ri);
 
-                print ("After partition to pivot " + pi.ToString());
+#if DEBUG
+                print("After partition to pivot " + pi.ToString());
                 UIList_DebugPrint(list, li, pi-1, "Left");
                 UIList_DebugPrint(list, pi, pi, "Pivot");
                 UIList_DebugPrint(list, pi+1, ri, "Right");
+#endif
 
                 UIList_QSort(list, li, pi - 1);
                 UIList_QSort(list, pi + 1, ri);
@@ -176,6 +186,7 @@ namespace AlphabeticalKerbals
         
         static void UIList_DebugPrint(UIList list, int li, int ri, string msg)
         {
+#if DEBUG
             string outmsg = msg + " -- ";
 
             for (int i = li; i < ri+1; i++)
@@ -186,6 +197,7 @@ namespace AlphabeticalKerbals
             }
 
             print(outmsg);
+#endif
         }
 
        

@@ -1,0 +1,12 @@
+This is a plugin for Kerbal Space Program to alphabetize the list of Kerbals.
+
+This should make it easier to find the individual you are looking for in a long
+list, or simply make the list look tidier and more organized for anyone who
+prefers their Kerbals to be in alphabetical order instead of always having the
+most recent hires at the bottom.
+
+Current status: BETA
+
+Only functions in the VAB/SPH at the moment. Other Kerbal lists are not yet
+sorted. Notably, I have not yet discovered a way to manipulate the dialog
+that appears when doing a direct launch by clicking the launchpad.
