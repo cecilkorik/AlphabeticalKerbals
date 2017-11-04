@@ -11,6 +11,12 @@ namespace AlphabeticalKerbals
    class KerbalSorter
     {
         static void print(string s) { MonoBehaviour.print("AlphabeticalKerbals: " + s); }
+
+        /// <summary>
+        /// Sorts the kerbals in the CrewAssignmentDialog
+        /// Will not work on dialogs that do not use the CrewAssignmentDialog GUI element
+        /// </summary>
+        /// <returns>success</returns>
         static public bool Sort_Kerbals()
         {
             if (CrewAssignmentDialog.Instance == null)
@@ -21,7 +27,7 @@ namespace AlphabeticalKerbals
             {
                 UIList avail = CrewAssignmentDialog.Instance.scrollListAvail;
 
-                UIList_QSort(avail, 0, avail.Count-1);
+                UIList_QSort(avail, 0, avail.Count - 1);
 
 #if DEBUG
                 for (int i = 0; i < avail.Count; i++)
@@ -33,41 +39,19 @@ namespace AlphabeticalKerbals
 #endif
 
                 return true;
-                
+
                 /*
-                print("AlphabeticalKerbals: OnEditorCrewOpened has CrewAssignmentDialog yay!!!");
-                UIList avail = CrewAssignmentDialog.Instance.scrollListAvail;
-                UIListItem first = avail.GetUilistItemAt(0);
-
-                print("AlphabeticalKerbals: Got first item in UIList");
-
-                if (first == null)
-                {
-                    //happens on first load
-                    print("AlphabeticalKerbals: Uhhh.... first is null?");
-                }
-                if (first.gameObject == null)
-                {
-                    print("AlphabeticalKerbals: Uhhh.... gameObject is null?");
-                }
-                Component[] comps = first.gameObject.GetComponents<Component>();
-                print("AlphabeticalKerbals: Uhhh.... got components???");
                 for (int i = 0; i < comps.Length; ++i)
                 {
                     print($"Component {i}: {comps[i].GetType()}");
                 }
 
-                CrewListItem firstdata = first.GetComponent<CrewListItem>();
-                print("AlphabeticalKerbals: Got a component for crew list item");
-                print("AlphabeticalKerbals: Got crew name: " + firstdata.GetName());
-
-                print("AlphabeticalKerbals: Got component list");
                 foreach (Component comp in firstdata)
                 {
-                    print("AlphabeticalKerbals: Got a component");
-                    print("AlphabeticalKerbals: Component name is " + comp.name);
-                    print("AlphabeticalKerbals: Component type is " + comp.GetType().Name);
-                    print("AlphabeticalKerbals: Component string is " + comp.ToString());
+                    print("Got a component");
+                    print("Component name is " + comp.name);
+                    print("Component type is " + comp.GetType().Name);
+                    print("Component string is " + comp.ToString());
                 }
                 */
 
@@ -78,6 +62,57 @@ namespace AlphabeticalKerbals
         }
 
         /// <summary>
+        /// Sorts Kerbals, but first checks the list to make sure it's not already sorted.
+        /// Overall, this ends up using more resources than just blind-sorting, but in cases 
+        /// where the list is almost always going to be correctly sorted, it may save some time.
+        /// </summary>
+        /// <returns>success</returns>
+        static public bool Sort_Kerbals_If_Needed()
+        {
+            if (CrewAssignmentDialog.Instance == null)
+            {
+                print("OnEditorCrewOpened has no CrewAssignmentDialog yet...");
+                return false;
+            }
+            else
+            {
+                UIList avail = CrewAssignmentDialog.Instance.scrollListAvail;
+                bool unsorted = false;
+
+                int i = 0;
+                for (; i < (avail.Count - 1); i++)
+                {
+                    UIListItem li = avail.GetUilistItemAt(i);
+                    UIListItem li2 = avail.GetUilistItemAt(i + 1);
+                    CrewListItem crew = li.GetComponent<CrewListItem>();
+                    if (UIList_Cmp(li, li2) > 0)
+                    {
+                        unsorted = true;
+
+                        break;
+                    }
+
+                }
+
+                if (unsorted)
+                {
+                    print("Change in Kerbal List detected, re-sorting");
+#if DEBUG
+                    print("Sort_If_Needed: Sort IS needed due to i = " + i.ToString());
+                    for (i = 0; i < avail.Count; i++)
+                    {
+                        UIListItem li = avail.GetUilistItemAt(i);
+                        CrewListItem crew = li.GetComponent<CrewListItem>();
+                        print("BEFORE SORT = " + crew.GetName());
+                    }
+#endif
+                    Sort_Kerbals();
+                }
+                return true;
+            }
+        }
+
+        /// <summary>
         /// Return value positive means left > right, return value negative means left < right
         /// </summary>
         /// <param name="left"></param>
@@ -85,16 +120,21 @@ namespace AlphabeticalKerbals
         /// <returns></returns>
         static int UIList_Cmp(UIListItem left, UIListItem right)
         {
-            if (left == null) { return 1; } // null values are considered greatest, so they are sorted at the end
-            if (right == null) { return -1; } // null values are considered greatest, so they are sorted at the end
-
             CrewListItem ldata = null;
             CrewListItem rdata = null;
             try { ldata = left.GetComponent<CrewListItem>(); } catch { return 1; }
             try { rdata = right.GetComponent<CrewListItem>(); } catch { return -1; }
 
+#if DEBUG
             if (ldata == null) { return 1; }
             if (rdata == null) { return -1; }
+#endif
+
+            bool ltourist = ldata.GetCrewRef().type == ProtoCrewMember.KerbalType.Tourist;
+            bool rtourist = rdata.GetCrewRef().type == ProtoCrewMember.KerbalType.Tourist;
+
+            if (ltourist && !rtourist) { return 1; } // tourists are also sorted to the end
+            if (!ltourist && rtourist) { return -1; } // tourists are also sorted to the end
 
             return ldata.GetName().CompareTo(rdata.GetName());
         }

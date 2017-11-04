@@ -10,12 +10,19 @@ using System.Text;
 namespace AlphabeticalKerbals
 {
 
+    public class AlphabetStatic
+    {
+        public static readonly TimeSpan update_interval = new TimeSpan(0, 0, 0, 0, 750);
+    }
+
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class AlphabetVAB : MonoBehaviour
     {
         public bool HasBeenSorted;
         public EditorScreen CurrentEditorScreen;
         private int sortAttempts;
+        private DateTime last_update;
+
 
         /// <summary>
         /// Module initialization
@@ -73,12 +80,11 @@ namespace AlphabeticalKerbals
         {
             try
             {
-                CurrentEditorScreen = screen;
-                HasBeenSorted = false;
-                sortAttempts = 0;
-
-                if (screen == EditorScreen.Crew)
+                if (CurrentEditorScreen != EditorScreen.Crew && screen == EditorScreen.Crew)
                 {
+                    last_update = DateTime.Now;
+                    HasBeenSorted = false;
+                    sortAttempts = 0;
                     OnEditorCrewOpened();
                 }
             }
@@ -86,6 +92,7 @@ namespace AlphabeticalKerbals
             {
                 print("AlphabeticalKerbals: There was an error in OnEditorScreenChange");
             }
+            CurrentEditorScreen = screen;
         }
 
         /// <summary>
@@ -109,6 +116,26 @@ namespace AlphabeticalKerbals
             }
         }
 
+        public void Update()
+        {
+            if (CurrentEditorScreen == EditorScreen.Crew)
+            {
+                if (last_update + AlphabetStatic.update_interval < DateTime.Now)
+                {
+                    // polling 3-4 times per second for crew panel updates
+                    OnCrewPanelTick();
+                    last_update = DateTime.Now;
+                }
+
+            }
+        }
+
+        public void OnCrewPanelTick()
+        {
+            KerbalSorter.Sort_Kerbals_If_Needed();
+        }
+
+
     }
 
 
@@ -116,10 +143,68 @@ namespace AlphabeticalKerbals
     [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
     public class AlphabetSC : MonoBehaviour
     {
+        public bool DialogUp = false;
+
+        private DateTime last_update;
+
         public void Start()
         {
             print("AlphabeticalKerbals: AlphabetSC started!");
         }
+
+        public void Update()
+        {
+            if (!DialogUp)
+            {
+                if (VesselSpawnDialog.Instance != null && VesselSpawnDialog.Instance.Visible)
+                {
+                    if (CrewAssignmentDialog.Instance != null && CrewAssignmentDialog.Instance.isActiveAndEnabled)
+                    {
+                        OnLaunchDialog();
+                        DialogUp = true;
+                        last_update = DateTime.Now;
+                    }
+                }
+
+            }
+            else if (DialogUp)
+            {
+                if (VesselSpawnDialog.Instance == null || !VesselSpawnDialog.Instance.Visible)
+                {
+                    if (CrewAssignmentDialog.Instance == null || !CrewAssignmentDialog.Instance.isActiveAndEnabled)
+                    {
+                        OnLaunchDialogClose();
+                        DialogUp = false;
+                    }
+
+                }
+                else if (last_update + AlphabetStatic.update_interval < DateTime.Now)
+                {
+                    // polling 3-4 times per second for crew panel updates
+                    OnLaunchDialogTick();
+                    last_update = DateTime.Now;
+                }
+
+            }
+        }
+
+        public void OnLaunchDialog()
+        {
+            print("Alphabetical Kerbals: Vessel Spawn Dialog detected.");
+
+            KerbalSorter.Sort_Kerbals();
+
+        }
+
+        public void OnLaunchDialogClose()
+        {
+        }
+
+        public void OnLaunchDialogTick()
+        {
+            KerbalSorter.Sort_Kerbals_If_Needed();
+        }
+
 
     }
 }
