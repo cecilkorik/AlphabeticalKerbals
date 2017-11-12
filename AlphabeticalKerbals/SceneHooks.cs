@@ -12,7 +12,7 @@ namespace AlphabeticalKerbals
 
     public class AlphabetStatic
     {
-        public static readonly TimeSpan update_interval = new TimeSpan(0, 0, 0, 0, 750);
+        public static readonly TimeSpan update_interval = new TimeSpan(0, 0, 0, 0, 333);
     }
 
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
